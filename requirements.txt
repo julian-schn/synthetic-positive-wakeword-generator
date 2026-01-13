@@ -7,3 +7,5 @@ pyyaml
 tqdm
 jupyter
 ipykernel
+datasets
+torchcodec
