@@ -1,0 +1,8 @@
+kokoro>=0.9.0
+numpy
+scipy
+soundfile
+pyyaml
+tqdm
+jupyter
+ipykernel

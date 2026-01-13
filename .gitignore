@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Output
+output/
+
+# Audio assets (large files)
+rir/
+noise/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store

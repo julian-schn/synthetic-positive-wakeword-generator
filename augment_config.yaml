@@ -1,0 +1,34 @@
+# Default augmentation configuration
+# All ranges are [min, max] for uniform sampling
+
+gain:
+  db_range: [-6, 3]  # Random gain adjustment in dB
+
+speed:
+  range: [0.9, 1.1]  # Speed multiplier (0.9x to 1.1x)
+
+pitch:
+  probability: 0.3  # Probability of applying pitch shift
+  semitone_range: [-2, 2]  # Pitch shift in semitones
+
+silence:
+  leading_range: [0.1, 0.5]   # Leading silence in seconds
+  trailing_range: [0.1, 0.5]  # Trailing silence in seconds
+
+reverb:
+  probability: 0.7  # Probability of applying room reverb
+  # Requires RIR files in --rir-dir
+
+noise:
+  probability: 0.8   # Probability of adding background noise
+  snr_db_range: [15, 30]  # Signal-to-noise ratio in dB
+  # Requires noise files in --noise-dir
+
+lowpass:
+  probability: 0.3  # Probability of applying distance simulation
+  cutoff_range: [3000, 6000]  # Cutoff frequency in Hz
+
+bandpass:
+  probability: 0.1  # Probability of telephone/radio effect
+  low_hz: 300       # Low cutoff (telephone: 300Hz)
+  high_hz: 3400     # High cutoff (telephone: 3400Hz)
