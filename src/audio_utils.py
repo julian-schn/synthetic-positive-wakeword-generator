@@ -81,6 +81,9 @@ def apply_gain(audio: np.ndarray, gain_db: float) -> np.ndarray:
     
     Returns:
         Audio with gain applied
+    
+    Note: IPython Audio widget normalizes playback, so gain differences
+    may not be audible when listening, but the actual audio data is modified.
     """
     gain_linear = 10 ** (gain_db / 20)
     return audio * gain_linear
@@ -114,7 +117,7 @@ def pitch_shift(
     sr: int,
     semitones: float
 ) -> np.ndarray:
-    """Shift pitch by resampling (changes duration, then time-corrects).
+    """Shift pitch using phase vocoder (preserves duration).
     
     Args:
         audio: Input audio array
@@ -124,15 +127,25 @@ def pitch_shift(
     Returns:
         Pitch-shifted audio (same length as input)
     """
-    # Calculate the resampling factor
-    factor = 2 ** (semitones / 12)
-    
-    # Resample to shift pitch (this also changes speed)
-    shifted_length = int(len(audio) / factor)
-    shifted = signal.resample(audio, shifted_length)
-    
-    # Resample back to original length (corrects duration)
-    return signal.resample(shifted, len(audio))
+    try:
+        import librosa
+        # Use librosa's pitch_shift which properly preserves duration
+        return librosa.effects.pitch_shift(
+            y=audio,
+            sr=sr,
+            n_steps=semitones,
+            bins_per_octave=12
+        )
+    except ImportError:
+        # Fallback: simple resampling approach (less accurate)
+        # This is a workaround - librosa should be preferred
+        factor = 2 ** (semitones / 12)
+        # Resample to shift pitch (changes duration)
+        shifted_length = int(len(audio) / factor)
+        shifted = signal.resample(audio, shifted_length)
+        # Time-stretch back to original length using linear interpolation
+        indices = np.linspace(0, len(shifted) - 1, len(audio))
+        return np.interp(indices, np.arange(len(shifted)), shifted)
 
 
 def time_stretch(

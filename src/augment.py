@@ -100,19 +100,34 @@ class AugmentationChain:
         
         # 2. Room reverb (RIR convolution)
         reverb_cfg = self.config.get("reverb", {})
-        if self.rir_files and rng.random() < reverb_cfg.get("probability", 0.7):
-            rir_file = rng.choice(self.rir_files)
-            audio, rir_meta = self._apply_rir(audio, sr, rir_file)
-            metadata.update(rir_meta)
+        if rng.random() < reverb_cfg.get("probability", 0.7):
+            if self.rir_files:
+                # Use real RIR file
+                rir_file = rng.choice(self.rir_files)
+                audio, rir_meta = self._apply_rir(audio, sr, rir_file)
+                metadata.update(rir_meta)
+            else:
+                # Generate synthetic RIR (exponential decay)
+                decay_time = rng.uniform(0.1, 0.5)
+                rir = self._create_synthetic_rir(sr, decay_time)
+                audio = signal.fftconvolve(audio, rir, mode='full')[:len(audio)]
+                metadata["reverb"] = f"synthetic_decay_{decay_time:.2f}s"
         
         # 3. Background noise mix
         noise_cfg = self.config.get("noise", {})
-        if self.noise_files and rng.random() < noise_cfg.get("probability", 0.8):
+        if rng.random() < noise_cfg.get("probability", 0.8):
             snr_range = noise_cfg.get("snr_db_range", [15, 30])
             snr_db = rng.uniform(*snr_range)
-            noise_file = rng.choice(self.noise_files)
-            audio, noise_meta = self._mix_noise(audio, sr, noise_file, snr_db, rng)
-            metadata.update(noise_meta)
+            
+            if self.noise_files:
+                # Use real noise file
+                noise_file = rng.choice(self.noise_files)
+                audio, noise_meta = self._mix_noise(audio, sr, noise_file, snr_db, rng)
+                metadata.update(noise_meta)
+            else:
+                # Generate synthetic noise (white noise)
+                audio = self._mix_synthetic_noise(audio, snr_db, rng)
+                metadata["noise"] = f"synthetic_white_snr_{snr_db:.1f}dB"
         
         return audio, metadata
     
@@ -188,3 +203,34 @@ class AugmentationChain:
             "noise_file": noise_file.name,
             "snr_db": round(snr_db, 1)
         }
+    
+    def _create_synthetic_rir(self, sr: int, decay_time: float) -> np.ndarray:
+        """Create synthetic room impulse response with exponential decay."""
+        length = int(sr * decay_time)
+        t = np.linspace(0, decay_time, length)
+        # Exponential decay with some randomness
+        rir = rng.randn(length) * np.exp(-5 * t)
+        rir[0] = 1.0  # Direct sound
+        # Normalize
+        rir = rir / np.abs(rir).max()
+        return rir
+    
+    def _mix_synthetic_noise(
+        self,
+        audio: np.ndarray,
+        snr_db: float,
+        rng: np.random.Generator
+    ) -> np.ndarray:
+        """Mix synthetic white noise at specified SNR."""
+        noise = rng.standard_normal(len(audio))
+        
+        # Calculate scaling for target SNR
+        audio_power = np.mean(audio ** 2)
+        noise_power = np.mean(noise ** 2)
+        
+        if noise_power > 0:
+            target_noise_power = audio_power / (10 ** (snr_db / 10))
+            scale = np.sqrt(target_noise_power / noise_power)
+            noise = noise * scale
+        
+        return audio + noise

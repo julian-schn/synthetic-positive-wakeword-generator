@@ -2,6 +2,7 @@ kokoro>=0.9.0
 numpy
 scipy
 soundfile
+librosa
 pyyaml
 tqdm
 jupyter
