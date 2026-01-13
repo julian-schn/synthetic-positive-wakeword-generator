@@ -109,7 +109,7 @@ class AugmentationChain:
             else:
                 # Generate synthetic RIR (exponential decay)
                 decay_time = rng.uniform(0.1, 0.5)
-                rir = self._create_synthetic_rir(sr, decay_time)
+                rir = self._create_synthetic_rir(sr, decay_time, rng)
                 audio = signal.fftconvolve(audio, rir, mode='full')[:len(audio)]
                 metadata["reverb"] = f"synthetic_decay_{decay_time:.2f}s"
         
@@ -204,12 +204,12 @@ class AugmentationChain:
             "snr_db": round(snr_db, 1)
         }
     
-    def _create_synthetic_rir(self, sr: int, decay_time: float) -> np.ndarray:
+    def _create_synthetic_rir(self, sr: int, decay_time: float, rng: np.random.Generator) -> np.ndarray:
         """Create synthetic room impulse response with exponential decay."""
         length = int(sr * decay_time)
         t = np.linspace(0, decay_time, length)
         # Exponential decay with some randomness
-        rir = rng.randn(length) * np.exp(-5 * t)
+        rir = rng.standard_normal(length) * np.exp(-5 * t)
         rir[0] = 1.0  # Direct sound
         # Normalize
         rir = rir / np.abs(rir).max()

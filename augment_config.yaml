@@ -1,34 +1,76 @@
-# Default augmentation configuration
+# Default augmentation configuration with recommended values
+# Based on best practices for wakeword/speech detection model training
 # All ranges are [min, max] for uniform sampling
 
 gain:
-  db_range: [-6, 3]  # Random gain adjustment in dB
+  # Volume adjustment in decibels
+  # Range: [-6, 3] dB is conservative and preserves speech clarity
+  # More aggressive: [-12, 6] dB (may cause clipping/distortion)
+  # Purpose: Simulates different microphone distances and recording levels
+  db_range: [-6, 3]
 
 speed:
-  range: [0.9, 1.1]  # Speed multiplier (0.9x to 1.1x)
+  # Speech tempo/speed multiplier
+  # Range: [0.9, 1.1] = ±10% variation (standard for speech augmentation)
+  # More aggressive: [0.85, 1.15] = ±15% (may sound unnatural)
+  # Purpose: Accounts for natural speaking rate variations
+  range: [0.9, 1.1]
 
 pitch:
-  probability: 0.3  # Probability of applying pitch shift
-  semitone_range: [-2, 2]  # Pitch shift in semitones
+  # Pitch shift in semitones (musical intervals)
+  # Probability: 0.5 = 50% of samples get pitch shifted
+  # Semitone range: [-2, 2] = ±2 semitones (safe for speech)
+  # More aggressive: [-4, 4] semitones (may sound unnatural)
+  # Purpose: Accounts for speaker voice pitch variations (age, gender, etc.)
+  probability: 0.5
+  semitone_range: [-2, 2]
 
 silence:
-  leading_range: [0.1, 0.5]   # Leading silence in seconds
-  trailing_range: [0.1, 0.5]  # Trailing silence in seconds
+  # Leading/trailing silence padding in seconds
+  # Range: [0.1, 0.5] seconds provides natural variation
+  # Purpose: Simulates real-world scenarios where wakewords aren't isolated
+  #          Helps model learn to ignore background before/after speech
+  leading_range: [0.1, 0.5]
+  trailing_range: [0.1, 0.5]
 
 reverb:
-  probability: 0.7  # Probability of applying room reverb
-  # Requires RIR files in --rir-dir
+  # Room impulse response (reverberation) application
+  # Probability: 0.7 = 70% of samples get reverb (high for robustness)
+  # Purpose: Simulates different room acoustics (small room, large hall, etc.)
+  #          Critical for real-world deployment where devices are in various rooms
+  # Requires RIR files in --rir-dir (MIT RIRs recommended)
+  probability: 0.7
 
 noise:
-  probability: 0.8   # Probability of adding background noise
-  snr_db_range: [15, 30]  # Signal-to-noise ratio in dB
-  # Requires noise files in --noise-dir
+  # Background noise mixing
+  # Probability: 0.8 = 80% of samples get noise (high for robustness)
+  # SNR range: [15, 30] dB = clean to moderately noisy (good for wakewords)
+  #   - 30 dB: Very clean, noise barely audible
+  #   - 20 dB: Moderate noise, speech still clear
+  #   - 15 dB: Noticeable noise, speech still intelligible
+  #   - 10 dB: Heavy noise (may be too aggressive for wakewords)
+  # Purpose: Simulates real-world background noise (fans, traffic, TV, etc.)
+  # If noise files not provided, synthetic white noise will be used
+  probability: 0.8
+  snr_db_range: [15, 30]
 
 lowpass:
-  probability: 0.3  # Probability of applying distance simulation
-  cutoff_range: [3000, 6000]  # Cutoff frequency in Hz
+  # Low-pass filter for distance simulation
+  # Probability: 0.3 = 30% of samples get filtered
+  # Cutoff range: [3000, 6000] Hz simulates moderate distance
+  #   - 6000 Hz: Slight muffling (moderate distance)
+  #   - 4000 Hz: Noticeable muffling (far distance)
+  #   - 3000 Hz: Strong muffling (very far, like phone call quality)
+  #   - 2000 Hz: Very aggressive (may be too much)
+  # Purpose: Simulates distance from microphone (farther = more high-frequency loss)
+  probability: 0.3
+  cutoff_range: [3000, 6000]
 
 bandpass:
-  probability: 0.1  # Probability of telephone/radio effect
-  low_hz: 300       # Low cutoff (telephone: 300Hz)
-  high_hz: 3400     # High cutoff (telephone: 3400Hz)
+  # Band-pass filter for telephone/radio effect (optional)
+  # Probability: 0.1 = 10% of samples (rare, special case)
+  # Purpose: Simulates degraded audio channels (phone calls, radio, etc.)
+  # Note: This is typically lower probability as it's a special case
+  probability: 0.1
+  low_hz: 300    # Telephone band: 300-3400 Hz
+  high_hz: 3400
