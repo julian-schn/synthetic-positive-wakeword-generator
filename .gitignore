@@ -1,13 +1,24 @@
 # Python
 __pycache__/
 *.py[cod]
+*.so
 .venv/
 venv/
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
 
 # Output
 output/
+positives/
 
-# Audio assets (large files)
+# Audio assets (large files - ~500MB)
+mit_rirs/
+mit_rirs_test/
 rir/
 noise/
 
@@ -15,6 +26,8 @@ noise/
 .idea/
 .vscode/
 *.swp
+*.code-workspace
 
 # OS
 .DS_Store
+Thumbs.db
