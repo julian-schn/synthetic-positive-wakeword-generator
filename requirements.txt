@@ -1,11 +1,28 @@
+# Core dependencies for synthetic wakeword generation
+# Note: The download_mit_rirs.py script handles complex version constraints automatically
+
+# TTS Engine
 kokoro>=0.9.0
-numpy
+
+# Audio Processing
+numpy<2.0            # Required for compatibility with older compiled packages
 scipy
 soundfile
 librosa
+
+# Utilities
 pyyaml
 tqdm
+
+# Jupyter (optional - for notebook interface)
 jupyter
 ipykernel
+
+# Dataset downloading (managed by download_mit_rirs.py)
+# The script installs specific compatible versions:
+# - numpy==1.26.4
+# - pyarrow==12.0.0
+# - datasets==2.18.0
+# If you encounter issues, run: python download_mit_rirs.py
 datasets
-torchcodec
+pyarrow
