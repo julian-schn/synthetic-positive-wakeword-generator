@@ -25,6 +25,7 @@ noise/
 # IDE
 .idea/
 .vscode/
+.claude/
 *.swp
 *.code-workspace
 
